@@ -1,0 +1,105 @@
+# Python bytecode / cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# C extensions
+*.so
+*.pyd
+*.dll
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment / secrets
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+# but keep example files
+!.env-example
+
+# IDE / Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.*.sw?
+.project
+.pydevproject
+.settings/
+.cursor/
+
+# OS specific
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+## Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+
+## Linux
+*~
+.directory
+.Trash-*
+
+# Project specific
+## Data storage
+.codex_data/
+.chroma/
+.vector_store/
+
+## Model files
+models/
+*.gguf
+*.bin
+*.ggml
+*.pt
+
+## Logs and debugging
+logs/
+*.log
+.ipynb_checkpoints/
+
+# Poetry
+poetry.lock 
