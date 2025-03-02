@@ -4,8 +4,7 @@ Query Engine - Handles generation of responses using LLMs.
 
 import os
 import logging
-import datetime
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional
 
 from ..storage.vector_store import VectorStore
 

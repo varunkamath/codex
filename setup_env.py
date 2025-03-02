@@ -4,7 +4,6 @@ Environment setup script for Codex.
 This script sets up the required environment variables for Codex.
 """
 
-import os
 import getpass
 from pathlib import Path
 from rich.console import Console

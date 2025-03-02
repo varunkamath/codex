@@ -3,11 +3,9 @@ Command Line Interface - CLI for Codex.
 """
 
 import os
-import sys
 import time
 import logging
 from pathlib import Path
-from typing import Optional, List, Dict, Any
 
 import click
 from rich.console import Console

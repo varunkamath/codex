@@ -10,7 +10,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 
 try:
     from dotenv import load_dotenv
@@ -54,8 +54,8 @@ if os.getenv("LOCAL_MODEL_PATH"):
 
     # Check for required libraries for local models
     try:
-        import llama_cpp
-        from langchain_community.llms import LlamaCpp
+        import llama_cpp  # noqa: F401
+        from langchain_community.llms import LlamaCpp  # noqa: F401
     except ImportError:
         print("Error: Required packages for local models not found.")
         print("Please install them with:")
@@ -196,7 +196,7 @@ def run_query(query_engine, question: str) -> None:
             console.print(f"\n[bold red]Error:[/bold red] {str(e)}")
             return
 
-    console.print(f"\n[bold green]Answer:[/bold green]")
+    console.print("\n[bold green]Answer:[/bold green]")
     console.print(Panel(answer, border_style="green"))
     console.print(f"\n{'=' * 80}\n")
 

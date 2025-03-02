@@ -2,8 +2,6 @@
 Code Parser - Handles parsing of code files and extraction of relevant information.
 """
 
-import os
-import re
 import logging
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Set, Tuple

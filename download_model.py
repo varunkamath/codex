@@ -5,9 +5,7 @@ Model Downloader for Codex.
 This script downloads a GGUF model for use with Codex locally.
 """
 
-import os
 import sys
-import argparse
 import requests
 from pathlib import Path
 from tqdm import tqdm

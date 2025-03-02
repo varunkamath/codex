@@ -2,7 +2,6 @@
 Documentation Parser - Handles parsing of documentation files.
 """
 
-import os
 import re
 import logging
 from pathlib import Path

@@ -2,11 +2,10 @@
 Vector Store - Handles storing and retrieving embeddings for code and documentation chunks.
 """
 
-import os
 import json
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any
 
 
 # Import optional dependencies at runtime
@@ -86,7 +85,7 @@ class VectorStore:
         """Get or create a ChromaDB collection."""
         try:
             return self.client.get_collection(name=name)
-        except:
+        except:  # noqa: E722
             return self.client.create_collection(name=name)
 
     def _load_metadata(self) -> Dict[str, Any]:
