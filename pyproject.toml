@@ -2,10 +2,10 @@
 name = "codex"
 version = "0.1.0"
 description = "Code Onboarding and Documentation EXpert"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Varun Kamath <varun.kamath@gmail.com>"]
 readme = "README.md"
-license = "MIT"
-repository = "https://github.com/yourusername/codex"
+license = "The Unlicense"
+repository = "https://github.com/varunkamath/codex"
 packages = [{include = "codex"}]
 
 [tool.poetry.dependencies]
