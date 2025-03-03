@@ -87,19 +87,64 @@ The demo will:
 
 Using Poetry:
 ```bash
-poetry run codex ingest --path /path/to/your/codebase
+# The correct way to run Codex on any codebase
+poetry run python -m codex.main ingest --path /path/to/your/codebase --output .your_codebase_data
+
+# Or with the simplified command (if installed as a package)
+poetry run codex ingest --path /path/to/your/codebase --output .your_codebase_data
 ```
 
 Or if you're in a poetry shell:
 ```bash
-codex ingest --path /path/to/your/codebase
+python -m codex.main ingest --path /path/to/your/codebase --output .your_codebase_data
+
+# Or with the simplified command (if installed as a package)
+codex ingest --path /path/to/your/codebase --output .your_codebase_data
 ```
+
+The `--output` parameter specifies where to store the processed data, which is useful when working with multiple codebases.
 
 ### Querying the System
 
+Using Poetry:
 ```bash
-codex query "How does the authentication system work?"
+# The correct way to query a specific codebase
+poetry run python -m codex.main query "How does the authentication system work?" --data-dir .your_codebase_data
+
+# Or with the simplified command (if installed as a package)
+poetry run codex query "How does the authentication system work?" --data-dir .your_codebase_data
 ```
+
+Or if you're in a poetry shell:
+```bash
+python -m codex.main query "How does the authentication system work?" --data-dir .your_codebase_data
+
+# Or with the simplified command (if installed as a package)
+codex query "How does the authentication system work?" --data-dir .your_codebase_data
+```
+
+### Working with Multiple Codebases
+
+Codex can be used to analyze and provide assistance for different codebases. To maintain separation between them:
+
+1. **Ingest each codebase with a unique output directory**:
+   ```bash
+   poetry run python -m codex.main ingest --path /path/to/codebase1 --output .codebase1_data
+   poetry run python -m codex.main ingest --path /path/to/codebase2 --output .codebase2_data
+   ```
+
+2. **Query a specific codebase using its data directory**:
+   ```bash
+   poetry run python -m codex.main query "How does feature X work?" --data-dir .codebase1_data
+   poetry run python -m codex.main query "How does feature Y work?" --data-dir .codebase2_data
+   ```
+
+3. **View statistics for a specific codebase**:
+   ```bash
+   poetry run python -m codex.main stats --data-dir .codebase1_data
+   ```
+
+This approach allows you to maintain separate knowledge bases for different projects.
 
 ## Architecture
 

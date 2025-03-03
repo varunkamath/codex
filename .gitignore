@@ -88,6 +88,7 @@ $RECYCLE.BIN/
 .codex_data/
 .chroma/
 .vector_store/
+.target_codebase_data/
 
 ## Model files
 models/
