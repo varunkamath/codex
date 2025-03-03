@@ -40,13 +40,25 @@ def setup_environment():
     model_name = model_name if model_name else "gpt-3.5-turbo"
 
     # Create .env file
+    env_content = f"""# OpenAI API Configuration
+OPENAI_API_KEY={openai_api_key}
+OPENAI_MODEL_NAME={model_name}
+
+# Local model configuration
+LOCAL_MODEL_PATH=models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+
+# Vector store directory
+PERSIST_DIRECTORY=.codex_data/chroma
+
+# Avoid tokenizers parallelism warning
+TOKENIZERS_PARALLELISM=false
+
+# Metal compilation cache for faster subsequent model loads
+GGML_METAL_PATH_RESOURCES=./metal_cache
+"""
+
     with open(env_file, "w") as f:
-        f.write("# Codex Environment Variables\n")
-        f.write(f"OPENAI_API_KEY={openai_api_key}\n")
-        f.write(f"OPENAI_MODEL_NAME={model_name}\n")
-        f.write("PERSIST_DIRECTORY=.codex_data/chroma\n")
-        f.write("# Avoid tokenizers parallelism warning\n")
-        f.write("TOKENIZERS_PARALLELISM=false\n")
+        f.write(env_content)
 
     console.print("\n[green]Environment setup complete![/green]")
     console.print("The .env file has been created with your settings.")

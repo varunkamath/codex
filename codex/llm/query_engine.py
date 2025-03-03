@@ -80,7 +80,10 @@ class QueryEngine:
                     temperature=0.7,
                     max_tokens=2000,
                     n_ctx=4096,
-                    verbose=False,
+                    n_gpu_layers=1,
+                    n_batch=512,
+                    n_threads=10,
+                    verbose=True,
                 )
                 self.llm_type = "local"
                 return
@@ -192,7 +195,16 @@ System: {prompt["system"]}
 User: {prompt["user"]}
 """
             result = self.llm.invoke(formatted_prompt)
-            return result.content
+
+            # Handle both string and object returns
+            if isinstance(result, str):
+                return result
+            elif hasattr(result, "content"):
+                return result.content
+            else:
+                # Try to convert to string as fallback
+                return str(result)
+
         except Exception as e:
             logger.error(f"Error querying local LLM: {str(e)}")
             return f"Error generating response: {str(e)}"
