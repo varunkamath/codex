@@ -188,7 +188,7 @@ def main():
             if "NVIDIA Jetson" in model_info:
                 is_jetson = True
                 jetson_model = model_info
-    except:
+    except:  # noqa: E722
         pass
 
     # Create models directory if it doesn't exist
@@ -197,7 +197,13 @@ def main():
 
     # Group models by category
     standard_models = ["llama2-7b", "llama2-7b-small", "tinyllama"]
-    high_performance_models = ["llama3-8b", "mistral-7b-v0.2", "falcon-7b", "codellama-7b", "hermes-3-llama-3.1-8b"]
+    high_performance_models = [
+        "llama3-8b",
+        "mistral-7b-v0.2",
+        "falcon-7b",
+        "codellama-7b",
+        "hermes-3-llama-3.1-8b",
+    ]
     large_models = ["llama3-8b-instruct-coder", "phi-4", "mistral-small-24b"]
 
     # Set default model based on platform
@@ -205,25 +211,37 @@ def main():
 
     # Display available models
     console.print("\n[bold]Available Models:[/bold]")
-    
+
     if is_jetson:
         console.print(f"\n[green]Detected Jetson platform: {jetson_model}[/green]")
-        console.print("[yellow]Recommending GPU-optimized models for your Jetson device[/yellow]")
-    
+        console.print(
+            "[yellow]Recommending GPU-optimized models for your Jetson device[/yellow]"
+        )
+
     console.print("\n[bold cyan]Standard Models:[/bold cyan]")
     for key in standard_models:
         model = AVAILABLE_MODELS[key]
-        console.print(f"  [green]{key}[/green]: {model['description']} ({model['size']})")
-    
-    console.print("\n[bold cyan]High Performance Models:[/bold cyan] [yellow](Suitable for Jetson with GPU)[/yellow]")
+        console.print(
+            f"  [green]{key}[/green]: {model['description']} ({model['size']})"
+        )
+
+    console.print(
+        "\n[bold cyan]High Performance Models:[/bold cyan] [yellow](Suitable for Jetson with GPU)[/yellow]"
+    )
     for key in high_performance_models:
         model = AVAILABLE_MODELS[key]
-        console.print(f"  [green]{key}[/green]: {model['description']} ({model['size']})")
-    
-    console.print("\n[bold cyan]Large Models:[/bold cyan] [yellow](Require Jetson Orin with good cooling)[/yellow]")
+        console.print(
+            f"  [green]{key}[/green]: {model['description']} ({model['size']})"
+        )
+
+    console.print(
+        "\n[bold cyan]Large Models:[/bold cyan] [yellow](Require Jetson Orin with good cooling)[/yellow]"
+    )
     for key in large_models:
         model = AVAILABLE_MODELS[key]
-        console.print(f"  [green]{key}[/green]: {model['description']} ({model['size']})")
+        console.print(
+            f"  [green]{key}[/green]: {model['description']} ({model['size']})"
+        )
 
     # Get user choice
     console.print(f"\nEnter the model to download (default: {default_model}):")
@@ -250,20 +268,22 @@ def main():
         console.print("1. Make sure you have the required packages:")
         console.print("   [cyan]poetry install[/cyan]")
         console.print("   [cyan]poetry add langchain-community llama-cpp-python[/cyan]")
-        
+
         # Jetson-specific instructions
         if is_jetson:
             console.print("\n[bold yellow]Jetson-Specific Setup:[/bold yellow]")
             console.print("1. For GPU acceleration, run our optimization script:")
             console.print("   [cyan]poetry run python jetson_gpu_optimize.py[/cyan]")
             console.print("2. Or compile llama-cpp-python with CUDA support manually:")
-            console.print("   [cyan]poetry run bash -c 'CUDACXX=/usr/local/cuda/bin/nvcc CMAKE_ARGS=\"-DGGML_CUDA=on\" FORCE_CMAKE=1 pip install llama-cpp-python --force-reinstall --upgrade --no-cache-dir'[/cyan]")
+            console.print(
+                "   [cyan]poetry run bash -c 'CUDACXX=/usr/local/cuda/bin/nvcc CMAKE_ARGS=\"-DGGML_CUDA=on\" FORCE_CMAKE=1 pip install llama-cpp-python --force-reinstall --upgrade --no-cache-dir'[/cyan]"
+            )
             console.print("3. Run with Jetson optimizations:")
             console.print("   [cyan]poetry run python demo.py --jetson[/cyan]")
         else:
             console.print("2. Run the demo:")
             console.print("   [cyan]poetry run python demo.py[/cyan]")
-        
+
         console.print("\nThe demo will now use your local model instead of OpenAI.")
 
     except Exception as e:

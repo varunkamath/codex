@@ -5,14 +5,12 @@ Jetson-specific setup script for Codex.
 This script configures Codex for optimal performance on NVIDIA Jetson platforms.
 """
 
-import os
 import sys
 import shutil
 from pathlib import Path
 
 try:
     from rich.console import Console
-    from rich.panel import Panel
 except ImportError:
     print("Required packages not found. Please install them with:")
     print("poetry install")
@@ -35,14 +33,18 @@ def setup_jetson_environment():
             model_info = f.read()
             is_jetson = "NVIDIA Jetson" in model_info
             if is_jetson:
-                console.print(f"[green]Detected Jetson platform: {model_info.strip()}[/green]")
+                console.print(
+                    f"[green]Detected Jetson platform: {model_info.strip()}[/green]"
+                )
             else:
-                console.print("[yellow]This doesn't appear to be a Jetson device.[/yellow]")
+                console.print(
+                    "[yellow]This doesn't appear to be a Jetson device.[/yellow]"
+                )
                 proceed = console.input("Continue anyway? [y/N]: ").lower() == "y"
                 if not proceed:
                     console.print("[yellow]Setup cancelled.[/yellow]")
                     return
-    except:
+    except:  # noqa: E722
         console.print("[yellow]Could not detect if this is a Jetson device.[/yellow]")
         proceed = console.input("Continue anyway? [y/N]: ").lower() == "y"
         if not proceed:
@@ -104,30 +106,44 @@ GPU_LAYERS_DRAFT=24
     if chroma_cache.exists():
         console.print("\n[bold red]WARNING: ChromaDB Migration Required[/bold red]")
         console.print("ChromaDB has changed its architecture and requires migration.")
-        console.print("The safest approach is to clear the existing data and start fresh.")
-        
-        clear_cache = console.input("\nClear existing ChromaDB data? [Y/n]: ").lower() != "n"
-        
+        console.print(
+            "The safest approach is to clear the existing data and start fresh."
+        )
+
+        clear_cache = (
+            console.input("\nClear existing ChromaDB data? [Y/n]: ").lower() != "n"
+        )
+
         if clear_cache:
             try:
                 shutil.rmtree(chroma_cache)
                 console.print("[green]ChromaDB cache cleared successfully.[/green]")
             except Exception as e:
                 console.print(f"[red]Error clearing cache: {str(e)}[/red]")
-                console.print("[yellow]Please manually delete the .codex_data/chroma directory.[/yellow]")
+                console.print(
+                    "[yellow]Please manually delete the .codex_data/chroma directory.[/yellow]"
+                )
         else:
-            console.print("[yellow]Keeping existing data. This may cause errors.[/yellow]")
+            console.print(
+                "[yellow]Keeping existing data. This may cause errors.[/yellow]"
+            )
             console.print("[yellow]If you encounter errors, run this command:[/yellow]")
             console.print("[cyan]rm -rf .codex_data/chroma[/cyan]")
-    
+
     # Provide next steps
     console.print("\n[bold]Next Steps:[/bold]")
     console.print("1. Run the demo with reduced chunk sizes:")
-    console.print("   [cyan]poetry run python demo.py --code-chunk-size 500 --doc-chunk-size 800[/cyan]")
+    console.print(
+        "   [cyan]poetry run python demo.py --code-chunk-size 500 --doc-chunk-size 800[/cyan]"
+    )
     console.print("\n2. Or ingest your own codebase with:")
-    console.print("   [cyan]poetry run python -m codex.main ingest --path /path/to/codebase --code-chunk-size 500 --doc-chunk-size 800[/cyan]")
-    console.print("\n[yellow]Note: Smaller chunk sizes help prevent memory issues on Jetson devices.[/yellow]")
+    console.print(
+        "   [cyan]poetry run python -m codex.main ingest --path /path/to/codebase --code-chunk-size 500 --doc-chunk-size 800[/cyan]"
+    )
+    console.print(
+        "\n[yellow]Note: Smaller chunk sizes help prevent memory issues on Jetson devices.[/yellow]"
+    )
 
 
 if __name__ == "__main__":
-    setup_jetson_environment() 
+    setup_jetson_environment()

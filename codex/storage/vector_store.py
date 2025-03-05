@@ -14,6 +14,7 @@ os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
 os.environ["OMP_PROC_BIND"] = "FALSE"
 os.environ["ONNXRUNTIME_DISABLE_CPU_AFFINITY"] = "1"
 
+
 # Import optional dependencies at runtime
 def import_vector_store_deps():
     global chromadb, get_embedding
@@ -40,17 +41,17 @@ def import_vector_store_deps():
                 model = SentenceTransformer(
                     "paraphrase-MiniLM-L3-v2",  # Smaller model that's more stable
                     device="cpu",
-                    quantize=True
+                    quantize=True,
                 )
-                logger.info("Loaded smaller embedding model (paraphrase-MiniLM-L3-v2) with quantization")
+                logger.info(
+                    "Loaded smaller embedding model (paraphrase-MiniLM-L3-v2) with quantization"
+                )
             except Exception as e:
                 logging.warning(f"Error loading smaller model: {e}")
                 try:
                     # Fallback to standard model with explicit settings
                     model = SentenceTransformer(
-                        "all-MiniLM-L6-v2", 
-                        device="cpu",
-                        quantize=True
+                        "all-MiniLM-L6-v2", device="cpu", quantize=True
                     )
                     logger.info("Loaded standard embedding model with quantization")
                 except Exception as e:
@@ -63,23 +64,31 @@ def import_vector_store_deps():
                 # Process in extremely small batches to avoid memory issues
                 batch_size = 1  # Process one at a time for maximum stability
                 all_embeddings = []
-                
+
                 # Handle empty input case
                 if not texts:
                     logger.warning("Empty texts provided to get_embedding")
                     return []
-                
+
                 try:
                     for i in range(0, len(texts), batch_size):
-                        batch = texts[i:i+batch_size]
+                        batch = texts[i : i + batch_size]
                         try:
                             # Add explicit error handling for each batch
-                            logger.debug(f"Encoding batch {i//batch_size} of {len(texts)//batch_size if len(texts) > 0 else 0}")
-                            batch_embeddings = model.encode(batch, show_progress_bar=False).tolist()
+                            logger.debug(
+                                f"Encoding batch {i // batch_size} of {len(texts) // batch_size if len(texts) > 0 else 0}"
+                            )
+                            batch_embeddings = model.encode(
+                                batch, show_progress_bar=False
+                            ).tolist()
                             all_embeddings.extend(batch_embeddings)
-                            logger.debug(f"Successfully encoded batch {i//batch_size}")
+                            logger.debug(
+                                f"Successfully encoded batch {i // batch_size}"
+                            )
                         except Exception as e:
-                            logger.error(f"Error encoding batch {i//batch_size}: {str(e)}")
+                            logger.error(
+                                f"Error encoding batch {i // batch_size}: {str(e)}"
+                            )
                             # Add zero embeddings as fallback for failed batches
                             # Get embedding dimension from model
                             if all_embeddings:
@@ -90,11 +99,11 @@ def import_vector_store_deps():
                                     dim = 384  # Default dimension for paraphrase-MiniLM-L3-v2
                                 else:
                                     dim = 384  # Default dimension for all-MiniLM-L6-v2
-                            
+
                             # Add zero embeddings for each text in the failed batch
                             for _ in batch:
                                 all_embeddings.append([0.0] * dim)
-                    
+
                     return all_embeddings
                 except Exception as e:
                     logger.error(f"Error in embedding generation: {str(e)}")
@@ -155,11 +164,11 @@ class VectorStore:
         try:
             self.code_collection = self.client.get_or_create_collection(
                 name="code_chunks",
-                metadata={"hnsw:search_ef": 50}  # Increase search_ef for better recall
+                metadata={"hnsw:search_ef": 50},  # Increase search_ef for better recall
             )
             self.doc_collection = self.client.get_or_create_collection(
                 name="doc_chunks",
-                metadata={"hnsw:search_ef": 50}  # Increase search_ef for better recall
+                metadata={"hnsw:search_ef": 50},  # Increase search_ef for better recall
             )
         except Exception as e:
             logger.error(f"Error creating collections: {e}")
@@ -210,10 +219,10 @@ class VectorStore:
         # Process in smaller batches to avoid memory issues on Jetson
         batch_size = 4  # Very small batch size for Jetson
         total_added = 0
-        
+
         for i in range(0, len(chunks), batch_size):
-            batch = chunks[i:i+batch_size]
-            
+            batch = chunks[i : i + batch_size]
+
             # Prepare data for ChromaDB
             ids = []
             documents = []
@@ -252,19 +261,27 @@ class VectorStore:
                         self.code_collection.add(
                             ids=[ids[j]],
                             documents=[documents[j]],
-                            metadatas=[metadatas[j]]
+                            metadatas=[metadatas[j]],
                         )
                         file_path = batch[j]["file_path"]
                         self.metadata["code_chunks"]["files"][file_path]["chunks"] += 1
                         total_added += 1
-                        logger.debug(f"Added individual code chunk {j} from batch {i//batch_size}")
+                        logger.debug(
+                            f"Added individual code chunk {j} from batch {i // batch_size}"
+                        )
                     except Exception as e2:
-                        logger.error(f"Error adding individual code chunk {j} from batch {i//batch_size}: {str(e2)}")
-                
-                logger.info(f"Processed batch {i//batch_size} with {len(batch)} code chunks, added {total_added} chunks")
+                        logger.error(
+                            f"Error adding individual code chunk {j} from batch {i // batch_size}: {str(e2)}"
+                        )
+
+                logger.info(
+                    f"Processed batch {i // batch_size} with {len(batch)} code chunks, added {total_added} chunks"
+                )
             except Exception as e:
-                logger.error(f"Error in batch processing for code chunks batch {i//batch_size}: {str(e)}")
-                
+                logger.error(
+                    f"Error in batch processing for code chunks batch {i // batch_size}: {str(e)}"
+                )
+
         # Update metadata
         self.metadata["code_chunks"]["count"] = total_added  # Set exact count
         self._save_metadata()
@@ -287,10 +304,10 @@ class VectorStore:
         # Process in smaller batches to avoid memory issues on Jetson
         batch_size = 4  # Very small batch size for Jetson
         total_added = 0
-        
+
         for i in range(0, len(chunks), batch_size):
-            batch = chunks[i:i+batch_size]
-            
+            batch = chunks[i : i + batch_size]
+
             # Prepare data for ChromaDB
             ids = []
             documents = []
@@ -328,19 +345,27 @@ class VectorStore:
                         self.doc_collection.add(
                             ids=[ids[j]],
                             documents=[documents[j]],
-                            metadatas=[metadatas[j]]
+                            metadatas=[metadatas[j]],
                         )
                         file_path = batch[j]["file_path"]
                         self.metadata["doc_chunks"]["files"][file_path]["chunks"] += 1
                         total_added += 1
-                        logger.debug(f"Added individual doc chunk {j} from batch {i//batch_size}")
+                        logger.debug(
+                            f"Added individual doc chunk {j} from batch {i // batch_size}"
+                        )
                     except Exception as e2:
-                        logger.error(f"Error adding individual doc chunk {j} from batch {i//batch_size}: {str(e2)}")
-                
-                logger.info(f"Processed batch {i//batch_size} with {len(batch)} doc chunks, added {total_added} chunks")
+                        logger.error(
+                            f"Error adding individual doc chunk {j} from batch {i // batch_size}: {str(e2)}"
+                        )
+
+                logger.info(
+                    f"Processed batch {i // batch_size} with {len(batch)} doc chunks, added {total_added} chunks"
+                )
             except Exception as e:
-                logger.error(f"Error in batch processing for doc chunks batch {i//batch_size}: {str(e)}")
-                
+                logger.error(
+                    f"Error in batch processing for doc chunks batch {i // batch_size}: {str(e)}"
+                )
+
         # Update metadata
         self.metadata["doc_chunks"]["count"] = total_added  # Set exact count
         self._save_metadata()
@@ -361,12 +386,14 @@ class VectorStore:
         try:
             # Use a higher n_results value to improve recall
             actual_limit = max(limit * 3, 20)  # Request more results than needed
-            logger.debug(f"Searching code with query: {query}, requesting {actual_limit} results")
-            
+            logger.debug(
+                f"Searching code with query: {query}, requesting {actual_limit} results"
+            )
+
             results = self.code_collection.query(
-                query_texts=[query], 
+                query_texts=[query],
                 n_results=actual_limit,
-                include=["documents", "metadatas", "distances"]
+                include=["documents", "metadatas", "distances"],
             )
 
             formatted_results = []
@@ -374,23 +401,31 @@ class VectorStore:
                 # Sort by distance to ensure we get the most relevant results
                 combined_results = []
                 for i, doc in enumerate(results["documents"][0]):
-                    combined_results.append({
-                        "content": doc,
-                        "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                        "id": results["ids"][0][i] if results["ids"] else f"result_{i}",
-                        "distance": results["distances"][0][i] if "distances" in results and results["distances"] else 1.0
-                    })
-                
+                    combined_results.append(
+                        {
+                            "content": doc,
+                            "metadata": results["metadatas"][0][i]
+                            if results["metadatas"]
+                            else {},
+                            "id": results["ids"][0][i]
+                            if results["ids"]
+                            else f"result_{i}",
+                            "distance": results["distances"][0][i]
+                            if "distances" in results and results["distances"]
+                            else 1.0,
+                        }
+                    )
+
                 # Sort by distance (lower is better)
                 combined_results.sort(key=lambda x: x["distance"])
-                
+
                 # Take only the requested number of results
                 formatted_results = combined_results[:limit]
-                
+
                 # Remove the distance field from the final results
                 for result in formatted_results:
                     result.pop("distance", None)
-                
+
                 logger.debug(f"Found {len(formatted_results)} relevant code chunks")
             return formatted_results
         except Exception as e:
@@ -411,12 +446,14 @@ class VectorStore:
         try:
             # Use a higher n_results value to improve recall
             actual_limit = max(limit * 3, 20)  # Request more results than needed
-            logger.debug(f"Searching docs with query: {query}, requesting {actual_limit} results")
-            
+            logger.debug(
+                f"Searching docs with query: {query}, requesting {actual_limit} results"
+            )
+
             results = self.doc_collection.query(
-                query_texts=[query], 
+                query_texts=[query],
                 n_results=actual_limit,
-                include=["documents", "metadatas", "distances"]
+                include=["documents", "metadatas", "distances"],
             )
 
             formatted_results = []
@@ -424,23 +461,31 @@ class VectorStore:
                 # Sort by distance to ensure we get the most relevant results
                 combined_results = []
                 for i, doc in enumerate(results["documents"][0]):
-                    combined_results.append({
-                        "content": doc,
-                        "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                        "id": results["ids"][0][i] if results["ids"] else f"result_{i}",
-                        "distance": results["distances"][0][i] if "distances" in results and results["distances"] else 1.0
-                    })
-                
+                    combined_results.append(
+                        {
+                            "content": doc,
+                            "metadata": results["metadatas"][0][i]
+                            if results["metadatas"]
+                            else {},
+                            "id": results["ids"][0][i]
+                            if results["ids"]
+                            else f"result_{i}",
+                            "distance": results["distances"][0][i]
+                            if "distances" in results and results["distances"]
+                            else 1.0,
+                        }
+                    )
+
                 # Sort by distance (lower is better)
                 combined_results.sort(key=lambda x: x["distance"])
-                
+
                 # Take only the requested number of results
                 formatted_results = combined_results[:limit]
-                
+
                 # Remove the distance field from the final results
                 for result in formatted_results:
                     result.pop("distance", None)
-                
+
                 logger.debug(f"Found {len(formatted_results)} relevant doc chunks")
             return formatted_results
         except Exception as e:

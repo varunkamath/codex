@@ -254,108 +254,124 @@ class DocParser:
         """
         # Handle empty or very small content
         if not content or len(content) <= chunk_size:
-            return [{
-                "content": content,
-                "size": len(content),
-                "line_count": content.count("\n") + 1 if content else 0,
-            }]
-            
+            return [
+                {
+                    "content": content,
+                    "size": len(content),
+                    "line_count": content.count("\n") + 1 if content else 0,
+                }
+            ]
+
         # Split by paragraphs first (double newlines)
         paragraphs = content.split("\n\n")
-        
+
         chunks = []
         current_chunk = []
         current_size = 0
-        
+
         # Safety check for very long paragraphs
         max_paragraph_length = max(len(p) for p in paragraphs) if paragraphs else 0
         if max_paragraph_length > chunk_size:
-            logger.warning(f"File contains paragraphs longer than chunk_size ({max_paragraph_length} > {chunk_size}). "
-                          f"Will split paragraphs as needed.")
-        
+            logger.warning(
+                f"File contains paragraphs longer than chunk_size ({max_paragraph_length} > {chunk_size}). "
+                f"Will split paragraphs as needed."
+            )
+
         for paragraph in paragraphs:
             paragraph_size = len(paragraph) + 2  # +2 for the "\n\n"
-            
+
             # If this paragraph alone exceeds chunk size, split it further
             if paragraph_size > chunk_size:
                 # If current chunk has content, add it to chunks
                 if current_chunk:
                     chunk_text = "\n\n".join(current_chunk)
-                    chunks.append({
-                        "content": chunk_text,
-                        "size": current_size,
-                        "line_count": chunk_text.count("\n") + 1,
-                    })
+                    chunks.append(
+                        {
+                            "content": chunk_text,
+                            "size": current_size,
+                            "line_count": chunk_text.count("\n") + 1,
+                        }
+                    )
                     current_chunk = []
                     current_size = 0
-                
+
                 # Split large paragraph by sentences or just characters if needed
                 sentences = paragraph.replace(". ", ".\n").split("\n")
                 sentence_chunk = []
                 sentence_size = 0
-                
+
                 for sentence in sentences:
                     sentence_len = len(sentence) + 1  # +1 for newline
-                    
+
                     if sentence_len > chunk_size:
                         # This single sentence is too long, split by characters
                         if sentence_chunk:
                             # Add accumulated sentences first
                             sentence_text = " ".join(sentence_chunk)
-                            chunks.append({
-                                "content": sentence_text,
-                                "size": sentence_size,
-                                "line_count": sentence_text.count("\n") + 1,
-                            })
+                            chunks.append(
+                                {
+                                    "content": sentence_text,
+                                    "size": sentence_size,
+                                    "line_count": sentence_text.count("\n") + 1,
+                                }
+                            )
                             sentence_chunk = []
                             sentence_size = 0
-                        
+
                         # Split the long sentence into fixed-size chunks
                         for i in range(0, len(sentence), chunk_size - 100):
-                            chunk_text = sentence[i:i + chunk_size - 100]
-                            chunks.append({
-                                "content": chunk_text,
-                                "size": len(chunk_text),
-                                "line_count": chunk_text.count("\n") + 1,
-                            })
+                            chunk_text = sentence[i : i + chunk_size - 100]
+                            chunks.append(
+                                {
+                                    "content": chunk_text,
+                                    "size": len(chunk_text),
+                                    "line_count": chunk_text.count("\n") + 1,
+                                }
+                            )
                     elif sentence_size + sentence_len > chunk_size and sentence_chunk:
                         # This sentence would make the chunk too big
                         sentence_text = " ".join(sentence_chunk)
-                        chunks.append({
-                            "content": sentence_text,
-                            "size": sentence_size,
-                            "line_count": sentence_text.count("\n") + 1,
-                        })
+                        chunks.append(
+                            {
+                                "content": sentence_text,
+                                "size": sentence_size,
+                                "line_count": sentence_text.count("\n") + 1,
+                            }
+                        )
                         sentence_chunk = [sentence]
                         sentence_size = sentence_len
                     else:
                         # Add to current sentence chunk
                         sentence_chunk.append(sentence)
                         sentence_size += sentence_len
-                
+
                 # Add any remaining sentences
                 if sentence_chunk:
                     sentence_text = " ".join(sentence_chunk)
-                    chunks.append({
-                        "content": sentence_text,
-                        "size": sentence_size,
-                        "line_count": sentence_text.count("\n") + 1,
-                    })
-            
+                    chunks.append(
+                        {
+                            "content": sentence_text,
+                            "size": sentence_size,
+                            "line_count": sentence_text.count("\n") + 1,
+                        }
+                    )
+
             # Normal case: paragraph fits in a chunk
             elif current_size + paragraph_size > chunk_size and current_chunk:
                 # This paragraph would make the chunk too big
                 chunk_text = "\n\n".join(current_chunk)
-                chunks.append({
-                    "content": chunk_text,
-                    "size": current_size,
-                    "line_count": chunk_text.count("\n") + 1,
-                })
-                
+                chunks.append(
+                    {
+                        "content": chunk_text,
+                        "size": current_size,
+                        "line_count": chunk_text.count("\n") + 1,
+                    }
+                )
+
                 # Start a new chunk with overlap
                 overlap_size = 0
                 overlap_paragraphs = []
-                
+
                 # Add paragraphs from the end until we reach desired overlap
                 for p in reversed(current_chunk):
                     p_size = len(p) + 2  # +2 for "\n\n"
@@ -364,31 +380,35 @@ class DocParser:
                         overlap_size += p_size
                     else:
                         break
-                
+
                 current_chunk = overlap_paragraphs + [paragraph]
                 current_size = overlap_size + paragraph_size
             else:
                 # Add to current chunk
                 current_chunk.append(paragraph)
                 current_size += paragraph_size
-        
+
         # Add the last chunk if it's not empty
         if current_chunk:
             chunk_text = "\n\n".join(current_chunk)
-            chunks.append({
-                "content": chunk_text,
-                "size": current_size,
-                "line_count": chunk_text.count("\n") + 1,
-            })
-        
+            chunks.append(
+                {
+                    "content": chunk_text,
+                    "size": current_size,
+                    "line_count": chunk_text.count("\n") + 1,
+                }
+            )
+
         # Ensure we have at least one chunk
         if not chunks:
-            chunks.append({
-                "content": "",
-                "size": 0,
-                "line_count": 0,
-            })
-            
+            chunks.append(
+                {
+                    "content": "",
+                    "size": 0,
+                    "line_count": 0,
+                }
+            )
+
         return chunks
 
     def process_docs(

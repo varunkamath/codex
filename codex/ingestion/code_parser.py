@@ -157,13 +157,15 @@ class CodeParser:
         """
         # Handle empty or very small files
         if not code_content or len(code_content) <= chunk_size:
-            return [{
-                "content": code_content,
-                "language": language,
-                "size": len(code_content),
-                "line_count": code_content.count("\n") + 1 if code_content else 0,
-            }]
-            
+            return [
+                {
+                    "content": code_content,
+                    "language": language,
+                    "size": len(code_content),
+                    "line_count": code_content.count("\n") + 1 if code_content else 0,
+                }
+            ]
+
         # Simple line-based chunking for now
         lines = code_content.split("\n")
         chunks = []
@@ -173,8 +175,10 @@ class CodeParser:
         # Safety check for very long lines that exceed chunk size
         max_line_length = max(len(line) for line in lines) if lines else 0
         if max_line_length > chunk_size:
-            logger.warning(f"File contains lines longer than chunk_size ({max_line_length} > {chunk_size}). "
-                          f"Consider increasing chunk_size or using character-based chunking.")
+            logger.warning(
+                f"File contains lines longer than chunk_size ({max_line_length} > {chunk_size}). "
+                f"Consider increasing chunk_size or using character-based chunking."
+            )
             # Adjust chunk size to accommodate the longest line
             chunk_size = max(chunk_size, max_line_length + 100)
 
@@ -223,12 +227,14 @@ class CodeParser:
 
         # Ensure we have at least one chunk
         if not chunks:
-            chunks.append({
-                "content": "",
-                "language": language,
-                "size": 0,
-                "line_count": 0,
-            })
+            chunks.append(
+                {
+                    "content": "",
+                    "language": language,
+                    "size": 0,
+                    "line_count": 0,
+                }
+            )
 
         return chunks
 

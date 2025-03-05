@@ -5,7 +5,6 @@ Reset ChromaDB script for Codex.
 This script completely resets the ChromaDB data and sets up the environment properly.
 """
 
-import os
 import sys
 import shutil
 from pathlib import Path
@@ -36,14 +35,18 @@ def reset_chroma():
             model_info = f.read()
             is_jetson = "NVIDIA Jetson" in model_info
             if is_jetson:
-                console.print(f"[green]Detected Jetson platform: {model_info.strip()}[/green]")
+                console.print(
+                    f"[green]Detected Jetson platform: {model_info.strip()}[/green]"
+                )
             else:
-                console.print("[yellow]This doesn't appear to be a Jetson device.[/yellow]")
+                console.print(
+                    "[yellow]This doesn't appear to be a Jetson device.[/yellow]"
+                )
                 proceed = console.input("Continue anyway? [y/N]: ").lower() == "y"
                 if not proceed:
                     console.print("[yellow]Reset cancelled.[/yellow]")
                     return
-    except:
+    except:  # noqa: E722
         console.print("[yellow]Could not detect if this is a Jetson device.[/yellow]")
         proceed = console.input("Continue anyway? [y/N]: ").lower() == "y"
         if not proceed:
@@ -58,12 +61,14 @@ def reset_chroma():
             console.print("[green]ChromaDB cache deleted successfully.[/green]")
         except Exception as e:
             console.print(f"[red]Error deleting ChromaDB cache: {str(e)}[/red]")
-            console.print("[yellow]Please manually delete the .codex_data/chroma directory.[/yellow]")
+            console.print(
+                "[yellow]Please manually delete the .codex_data/chroma directory.[/yellow]"
+            )
             return
 
     # Create .env file with optimized settings
     env_file = Path(".env")
-    
+
     env_content = """# Codex Environment Variables - Jetson Configuration
 
 # Local model configuration
@@ -108,9 +113,13 @@ EMBEDDING_BATCH_SIZE=1
     # Provide next steps
     console.print("\n[bold]Next Steps:[/bold]")
     console.print("1. Run the demo with very small chunk sizes:")
-    console.print("   [cyan]poetry run python demo.py --code-chunk-size 300 --doc-chunk-size 500[/cyan]")
-    console.print("\n[yellow]Note: Using very small chunk sizes helps prevent memory issues on Jetson devices.[/yellow]")
+    console.print(
+        "   [cyan]poetry run python demo.py --code-chunk-size 300 --doc-chunk-size 500[/cyan]"
+    )
+    console.print(
+        "\n[yellow]Note: Using very small chunk sizes helps prevent memory issues on Jetson devices.[/yellow]"
+    )
 
 
 if __name__ == "__main__":
-    reset_chroma() 
+    reset_chroma()
