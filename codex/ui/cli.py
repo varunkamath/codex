@@ -228,9 +228,82 @@ def query_codebase(
             description=f"[bold blue]Generated response in {elapsed_time:.2f} seconds",
         )
 
-    # Display response
-    console.print("\n[bold]Answer[/bold]:")
-    console.print(Panel(Markdown(response), border_style="green"))
+    # Print the response
+    console.print("\nAnswer:")
+    console.print(Panel(Markdown(response), expand=False))
+
+
+def interactive_chat(data_dir: str = ".codex_data", model: str = "gpt-3.5-turbo", context_window: int = 200000):
+    """
+    Start an interactive chat session with the AI assistant.
+    
+    This mode keeps the model loaded between queries for faster response times.
+
+    Args:
+        data_dir: Directory containing processed codebase data
+        model: LLM model to use for generating responses
+        context_window: Size of the context window for the model
+    """
+    show_header()
+    console.print("[bold green]Interactive Chat Mode[/bold green]")
+    console.print("Type your questions about the codebase. Type 'exit' or 'quit' to end the session.")
+    
+    # Set environment variables
+    if model:
+        os.environ["OPENAI_API_KEY_MODEL"] = model
+    
+    # Set context window size
+    os.environ["CONTEXT_WINDOW_SIZE"] = str(context_window)
+    
+    # Initialize the query engine once
+    with Progress(
+        SpinnerColumn(), TextColumn("[bold blue]{task.description}"), console=console
+    ) as progress:
+        task_id = progress.add_task(
+            "[bold blue]Initializing query engine and loading model...", total=None
+        )
+        
+        # Initialize the query engine
+        engine = QueryEngine(data_dir=data_dir)
+        
+        progress.update(task_id, description="[bold blue]Model loaded successfully!")
+    
+    console.print("[green]Model loaded successfully! You can now ask questions.[/green]")
+    
+    # Chat history for context
+    chat_history = []
+    
+    # Main chat loop
+    while True:
+        # Get user input
+        console.print("\n[bold cyan]You:[/bold cyan] ", end="")
+        query = input()
+        
+        # Check for exit command
+        if query.lower() in ["exit", "quit", "q", "bye"]:
+            console.print("[yellow]Exiting chat mode. Goodbye![/yellow]")
+            break
+        
+        # Skip empty queries
+        if not query.strip():
+            continue
+            
+        # Add to chat history
+        chat_history.append(f"User: {query}")
+        
+        # Generate response
+        console.print("[bold purple]Codex:[/bold purple] ", end="")
+        
+        start_time = time.time()
+        response = engine.query(query)
+        elapsed_time = time.time() - start_time
+        
+        # Print the response
+        console.print(Panel(Markdown(response), expand=False))
+        console.print(f"[dim](Response generated in {elapsed_time:.2f} seconds)[/dim]")
+        
+        # Add to chat history
+        chat_history.append(f"Assistant: {response}")
 
 
 def show_stats(data_dir: str = ".codex_data"):
@@ -324,6 +397,30 @@ def main():
     def query(query_text, data_dir, model):
         """Query the AI about your codebase."""
         query_codebase(query_text, data_dir, model)
+        
+    # Interactive chat command
+    @cli.command()
+    @click.option(
+        "--data-dir",
+        "-d",
+        default=".codex_data",
+        help="Directory with processed codebase data",
+    )
+    @click.option(
+        "--model",
+        "-m",
+        default="gpt-3.5-turbo",
+        help="LLM model to use for generating responses",
+    )
+    @click.option(
+        "--context-window",
+        "-c",
+        default=200000,
+        help="Size of the context window for the model",
+    )
+    def chat(data_dir, model, context_window):
+        """Start an interactive chat session with the AI about your codebase."""
+        interactive_chat(data_dir, model, context_window)
 
     # Stats command
     @cli.command()

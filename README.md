@@ -123,6 +123,23 @@ python -m codex.main query "How does the authentication system work?" --data-dir
 codex query "How does the authentication system work?" --data-dir .your_codebase_data
 ```
 
+### Interactive Chat Mode
+
+Codex now includes an interactive chat mode that keeps the model loaded between queries for faster response times:
+
+```bash
+# Start an interactive chat session with a specific codebase
+poetry run python -m codex.main chat --data-dir .your_codebase_data
+
+# With custom context window size (default is 200,000 tokens)
+poetry run python -m codex.main chat --data-dir .your_codebase_data --context-window 100000
+
+# Or with the simplified command (if installed as a package)
+poetry run codex chat --data-dir .your_codebase_data
+```
+
+This mode is especially useful when you want to have a conversation about your codebase without reinitializing the model for each query. The chat maintains history between questions, providing more contextual responses.
+
 ### Working with Multiple Codebases
 
 Codex can be used to analyze and provide assistance for different codebases. To maintain separation between them:

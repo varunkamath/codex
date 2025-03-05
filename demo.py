@@ -9,6 +9,7 @@ its own codebase and answering questions about it.
 import os
 import sys
 import time
+import argparse
 from pathlib import Path
 from typing import Dict, Any
 
@@ -74,13 +75,39 @@ DEMO_QUESTIONS = [
     "What file types can Codex ingest?",
 ]
 
+# Check if running on Jetson platform
+def is_jetson_platform():
+    """Check if running on a Jetson platform."""
+    try:
+        with open("/proc/device-tree/model", "r") as f:
+            model_info = f.read().strip()
+            return "NVIDIA Jetson" in model_info, model_info
+    except:
+        return False, ""
 
-def ingest_codebase(codebase_path: Path) -> Dict[str, Any]:
+# Check for CUDA support in llama-cpp-python
+def has_cuda_support():
+    """Check if llama-cpp-python was compiled with CUDA support."""
+    try:
+        import llama_cpp
+        return hasattr(llama_cpp._lib, "llama_backend_cuda_init")
+    except:
+        return False
+
+def ingest_codebase(
+    codebase_path: Path,
+    output_dir: str = ".codex_data",
+    code_chunk_size: int = 1000,
+    doc_chunk_size: int = 1500,
+) -> Dict[str, Any]:
     """
     Ingest a codebase into the vector store.
 
     Args:
         codebase_path: Path to the codebase
+        output_dir: Directory to store the processed data
+        code_chunk_size: Maximum chunk size for code files
+        doc_chunk_size: Maximum chunk size for documentation files
 
     Returns:
         Dictionary with statistics about the ingestion
@@ -203,6 +230,65 @@ def run_query(query_engine, question: str) -> None:
 
 def run_demo() -> None:
     """Run the Codex demo."""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Codex Demo")
+    parser.add_argument("--code-chunk-size", type=int, default=1000, 
+                        help="Maximum chunk size for code files (default: 1000)")
+    parser.add_argument("--doc-chunk-size", type=int, default=1500, 
+                        help="Maximum chunk size for documentation files (default: 1500)")
+    parser.add_argument("--jetson", action="store_true", 
+                        help="Use Jetson-optimized settings (smaller chunks)")
+    parser.add_argument("--gpu-layers", type=int, 
+                        help="Number of layers to offload to GPU (overrides .env setting)")
+    parser.add_argument("--batch-size", type=int, 
+                        help="Batch size for model inference (overrides .env setting)")
+    args = parser.parse_args()
+    
+    # Check if running on Jetson
+    is_jetson, jetson_model = is_jetson_platform()
+    
+    # Apply Jetson preset if requested or if running on Jetson
+    if args.jetson or is_jetson:
+        if not args.jetson and is_jetson:
+            console.print(f"[yellow]Detected Jetson platform: {jetson_model}[/yellow]")
+            console.print("[yellow]Automatically applying Jetson-optimized settings[/yellow]")
+        
+        # Apply Jetson-optimized settings
+        args.code_chunk_size = args.code_chunk_size or 500
+        args.doc_chunk_size = args.doc_chunk_size or 800
+        
+        # Check for CUDA support
+        cuda_available = has_cuda_support()
+        if cuda_available:
+            console.print("[green]CUDA support detected in llama-cpp-python[/green]")
+            
+            # Set GPU layers if not already set in environment
+            if not os.environ.get("N_GPU_LAYERS") and not args.gpu_layers:
+                if "Orin" in jetson_model:
+                    n_gpu_layers = 24
+                elif "Xavier" in jetson_model:
+                    n_gpu_layers = 16
+                else:
+                    n_gpu_layers = 8
+                
+                os.environ["N_GPU_LAYERS"] = str(n_gpu_layers)
+                os.environ["GPU_LAYERS_DRAFT"] = str(n_gpu_layers)
+                console.print(f"[green]Set GPU layers to {n_gpu_layers} based on Jetson model[/green]")
+        else:
+            console.print("[yellow]CUDA support not detected in llama-cpp-python[/yellow]")
+            console.print("[yellow]For GPU acceleration, recompile llama-cpp-python with CUDA support:[/yellow]")
+            console.print("[cyan]poetry run python jetson_gpu_optimize.py[/cyan]")
+    
+    # Override environment variables if command line args provided
+    if args.gpu_layers is not None:
+        os.environ["N_GPU_LAYERS"] = str(args.gpu_layers)
+        os.environ["GPU_LAYERS_DRAFT"] = str(args.gpu_layers)
+        console.print(f"[green]Set GPU layers to {args.gpu_layers} from command line[/green]")
+    
+    if args.batch_size is not None:
+        os.environ["N_BATCH"] = str(args.batch_size)
+        console.print(f"[green]Set batch size to {args.batch_size} from command line[/green]")
+    
     console.print(
         Panel.fit(
             "[bold blue]Codex Demo[/bold blue]\n\n"
@@ -225,7 +311,12 @@ def run_demo() -> None:
 
     # Ingest the codebase
     console.print("\n[bold]Step 1:[/bold] Ingesting the Codex codebase")
-    stats = ingest_codebase(codebase_path)
+    console.print(f"[dim]Using chunk sizes: Code={args.code_chunk_size}, Docs={args.doc_chunk_size}[/dim]")
+    stats = ingest_codebase(
+        codebase_path, 
+        code_chunk_size=args.code_chunk_size, 
+        doc_chunk_size=args.doc_chunk_size
+    )
 
     console.print("\n[bold green]Ingestion complete![/bold green]")
     console.print(
